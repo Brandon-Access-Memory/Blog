@@ -1,0 +1,93 @@
+http:
+  middlewares:
+   # Redirect requests to the http EntryPoint to https
+  # Use with the label "traefik.http.routers.myRouter.middlewares=https-redirect@file"
+    https-redirect:
+      redirectScheme:
+        scheme: https
+        permanent: true
+
+    # Add basic auth generate hashed password using apache2utils
+    # Use with the label "traefik.http.routers.myRouter.middlewares=traefik-auth@file"
+    traefik-auth:
+      basicAuth:
+        users:
+          - "admin:password"
+
+    # Defines default security headers
+    # Use with the label "traefik.http.routers.myRouter.middlewares=default-security-headers@file"
+    default-security-headers:
+      headers:
+        frameDeny: true
+        browserXssFilter: true
+        contentTypeNosniff: true
+        forceSTSHeader: true
+        stsIncludeSubdomains: true
+        stsPreload: true
+        stsSeconds: 15552000
+        customFrameOptionsValue: SAMEORIGIN
+        customRequestHeaders:
+          X-Forwarded-Proto: https
+
+    # Recommended default middleware for most of the services
+    # Use with "traefik.http.routers.myRouter.middlewares=default@file"
+    default:
+      chain:
+        middlewares:
+          - https-redirect
+          - default-security-headers   
+
+# See https://doc.traefik.io/traefik/https/tls/
+tls:
+  options:
+    # To use with the label "traefik.http.routers.myrouter.tls.options=modern@file"
+    modern:
+      minVersion: VersionTLS13                          # Minimum TLS Version
+      sniStrict: true                                     # Strict SNI Checking
+    
+    # To use with the label "traefik.http.routers.myrouter.tls.options=intermediate@file"
+    intermediate:
+      cipherSuites:
+        - "TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256"
+        - "TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256"
+        - "TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384"
+        - "TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384"
+        - "TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305"
+        - "TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305"
+      minVersion: VersionTLS12                            # Minimum TLS Version
+      sniStrict: true                                     # Strict SNI Checking
+    
+    # To use with the label "traefik.http.routers.myrouter.tls.options=old@file"
+    old:
+      cipherSuites:
+        - "TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256"
+        - "TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256"
+        - "TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384"
+        - "TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384"
+        - "TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305"
+        - "TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305"
+        - "TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256"
+        - "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256"
+        - "TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA"
+        - "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA"
+        - "TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA"
+        - "TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA"
+        - "TLS_RSA_WITH_AES_128_GCM_SHA256"
+        - "TLS_RSA_WITH_AES_256_GCM_SHA384"
+        - "TLS_RSA_WITH_AES_128_CBC_SHA256"
+        - "TLS_RSA_WITH_AES_128_CBC_SHA"
+        - "TLS_RSA_WITH_AES_256_CBC_SHA"
+        - "TLS_RSA_WITH_3DES_EDE_CBC_SHA"
+      minVersion: "TLSv1"                                 # Minimum TLS Version
+      sniStrict: true                                     # Strict SNI Checking
+
+#   stores:
+#     default:
+#       defaultCertificate:                               # Overwrite Default Certificates
+#         certFile: /etc/traefik/certs/cert.pem
+#         keyFile: /etc/traefik/certs/cert-key.pem
+                                           
+serversTransport:
+  insecureSkipVerify: true                                # Disable TLS Cert verification check
+
+

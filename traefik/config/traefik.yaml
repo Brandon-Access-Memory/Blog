@@ -1,0 +1,60 @@
+global:
+  checkNewVersion: true                       # Periodically check if a new version has been released.
+  sendAnonymousUsage: true                    # Periodically send anonymous usage statistics.
+
+# -- (Optional) Change Log Level and Format here...
+#     - loglevels [DEBUG, INFO, WARNING, ERROR, CRITICAL]
+#     - format [common, json, logfmt]
+log:
+ level: WARNING
+ format: common
+ filePath: /var/log/traefik/traefik.log
+
+# -- (Optional) Enable Accesslog and change Format here...
+#     - format [common, json, logfmt]
+accessLog:
+  format: common
+  filePath: /var/log/traefik/access.log
+
+api:
+  dashboard: true                             # Enable API dashboard
+  insecure: true
+
+entryPoints:
+  http:
+    address: ":80"                            # Create the HTTP entrypoint on port 80
+  https:
+    address: ":443"                           # Create the HTTPS entrypoint on port 443
+
+# Certificate Resolvers are responsible for retrieving certificates from an ACME server
+# See https://doc.traefik.io/traefik/https/acme/#certificate-resolvers
+certificatesResolvers:
+  staging:
+    acme:
+      email: example@domain.tld
+      storage: /etc/traefik/certs/acme.json
+      caServer: "https://acme-staging-v02.api.letsencrypt.org/directory"
+      dnsChallenge:
+        provider: cloudflare
+        resolvers:
+          - "1.1.1.1:53"
+          - "8.8.8.8:53"
+  production:
+    acme:
+      email: example@domain.tld
+      storage: /etc/traefik/certs/acme.json
+      caServer: "https://acme-v02.api.letsencrypt.org/directory"
+      dnsChallenge:
+        provider: cloudflare
+        resolvers:
+          - "1.1.1.1:53"
+          - "8.8.8.8:53"
+
+providers:
+  docker:
+    exposedByDefault: false                   # Only expose container that are explicitly enabled (using label traefik.enabled)
+    network: "traefik_network"                # Default network to use for connections to all containers.
+  file:
+    filename: "/etc/traefik/dynamic_config.yaml"       # Link to the dynamic configuration
+    watch: true                                        # Watch for modifications
+  providersThrottleDuration: "10"                      # Configuration reload frequency

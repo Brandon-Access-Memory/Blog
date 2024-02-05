@@ -1,0 +1,35 @@
+version: '3'
+
+networks:
+  traefik_network:          # This network should be defined prior
+    external: true          # Inidicates this network already exists
+
+services:
+  traefik:
+    image: traefik:latest
+    container_name: traefik
+    restart: unless-stopped
+    ports:
+      - 80:80           # http entrypoint
+      - 443:443         # https entrypoiny
+    volumes:
+     - ./config:/etc/traefik                          # Bind mount where static and dynamic config YAML files are stored
+     - ./logs:/var/log/traefik                        # Bind mount where logs are stored
+     - /var/run/docker.sock:/var/run/docker.sock:ro   # Docker socket set to read-only as a security measure
+    environment:
+      - TZ=Europe/London            # Set timezone
+      - CF_DNS_API_TOKEN=           # Insert Cloudflare API token here
+    labels:
+      - "traefik.enable=true"                                                                     # Enables this container for routing within traefik
+      - "traefik.http.routers.traefik.entrypoints=http"                                           # Defines an entrypoint for this service on http
+      - "traefik.http.routers.traefik.rule=Host(`traefik.subdomain.mydomain.tld`)"                # Defines the hostname of the service (http)
+      - "traefik.http.routers.traefik.middlewares=https-redirect@file"                            # Calls the https-redirect middleware when this service is accessed via the https entrypoint
+      - "traefik.http.routers.traefik-secure.entrypoints=https"                                   # Defines an entrypoint for this service on https
+      - "traefik.http.routers.traefik-secure.rule=Host(`traefik.subdomain.mydomain.tld`)"         # Defines the hostname of the service (https)
+      - "traefik.http.routers.traefik-secure.tls=true"                                            # Use TLS to connect to this service
+      - "traefik.http.routers.traefik-secure.tls.certresolver=production"                         # Use the production cert resolver
+      - "traefik.http.routers.traefik-secure.tls.domains[0].main=mydomain.tld"                    # Request a certificate for the main domain mydomain.tld
+      - "traefik.http.routers.traefik-secure.tls.domains[0].sans=*.subdomain.mydomain.tld"        # Add subdomain.mydomain.tld as a Subject Alternative Name
+      - "traefik.http.routers.traefik-secure.service=api@internal"
+    networks:
+      - traefik_network
